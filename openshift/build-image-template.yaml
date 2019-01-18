@@ -1,0 +1,53 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  name: "build-jenkins-slave-skopeo"
+  annotations:
+    description: OpenShift template for building a Jenkins image with Skopeo and Gopass
+    tags: jenkins,skopeo,gopass
+    iconClass: icon-jenkins
+    openshift.io/provider-display-name: Ahmed Bessifi <abessif@redhat.com>
+    openshift.io/documentation-url: 
+    template.openshift.io/bindable: 'false'
+labels:
+  template: "jenkins-slave-skopeo"
+objects:
+  - apiVersion: v1
+    kind: ImageStream
+    metadata:
+      name: jenkins-slave-skopeo
+      labels:
+        role: jenkins-slave
+        app: jenkins-slave-skopeo
+    spec: {}
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      labels:
+        app: jenkins-slave-skopeo
+      name: jenkins-slave-skopeo
+    spec:
+      runPolicy: Serial
+      strategy:
+        type: Docker
+        dockerStrategy:
+          env:
+            - name: OPENSHIFT_CLIENT_VERSION
+              value: "${OPENSHIFT_CLIENT_VERSION}"
+      source:
+        type: Git
+        git:
+          uri: 'https://github.com/abessifi/jenkins-slave-skopeo'
+          ref: master
+      output:
+        to:
+          kind: ImageStreamTag
+          name: 'jenkins-slave-skopeo:latest'
+      triggers:
+        - type: ConfigChange
+parameters:
+- name: OPENSHIFT_CLIENT_VERSION
+  displayName: OpenShift Client Version
+  value: 3.7.23
+  required: true
